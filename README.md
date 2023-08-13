@@ -5,8 +5,9 @@ The main purpose of this code is to create new contracts between volunteers and 
 ### Stepwise:
     1. Raw data from a source Spreadsheet is taken;
     2. Transformed;
-    3. A template contract is filled with data;
-    4. The new contract is stored in a folder in Google Drive;
-    5. A journal for newly created contracts is filled. 
+    3. Some nouns need to change their form in Ukrainian language, so integration with ChatGPT was added;
+    4. A template contract is filled with data;
+    5. The new contract is stored in a folder in Google Drive;
+    6. A journal for newly created contracts is filled. 
 
 Users can interract with the script via a button in menu.
