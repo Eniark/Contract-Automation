@@ -1,26 +1,91 @@
+function generateRandomInt(min, max) {
+    let difference = max - min;
+    let rand = Math.random();
+    rand = Math.floor( rand * difference);
+    rand = rand + min;
+
+    return rand;
+}
+
+
+
+function callChatGPT(prompt) {
+  if (OPENAI_API_TOKEN === null) {
+    throw new Error('ChatGPT API Key script property is missing');
+  }                  
+  const apiUrl = 'https://api.openai.com/v1/chat/completions';
+  const options = {
+    method: 'post',
+    headers: {
+      'Authorization': `Bearer ${OPENAI_API_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    muteHttpExceptions: true,
+    payload: JSON.stringify({
+      messages: [{
+        role: 'user',
+        content: prompt
+        }],
+      model: 'gpt-3.5-turbo',
+      temperature: 1,
+      max_tokens: 2000,
+    }),
+  };
+  const response = UrlFetchApp.fetch(apiUrl, options);
+  const content = JSON.parse(response.getContentText());
+
+
+  if (content.hasOwnProperty('error'))
+  {
+    throw new Error(ERROR_MSGS.GPT_RATE_LIMIT_EXCEEDED_ERROR)
+  }
+  console.log(content)
+
+  return content;
+
+}
+
+
+
 function formatDate(date, format='DDMMYYYY', sep='.') {
   /*
     Formats the date according to <format> parameter
     Parameters:
     =========================================
-      date: an object of class Date
+      date: a Date object
       format: format into which to convert the string. Supports only 'DDMMMYYYY' and 'DDMMYYYY'
       sep: separator for <format> parameter. If null, returns array in [day, month, year] format
   */
   let month, day, year;  
+  const [dd,mm,yyyy] = [date.getDate(),date.getMonth(), date.getFullYear()]
 
   if (format=='DDMMYYYY'){
-    day = String(date.getDate()).padStart(2, '0');
-    month = String(date.getMonth() + 1).padStart(2, '0');
-    year = String(date.getFullYear());
+    day = String(dd).padStart(2, '0');
+    month = String(mm + 1).padStart(2, '0');
+    year = String(yyyy);
 
   }
   else if (format=='DDMMMMYYYY'){
-    day = date.getDate();
-    month = ukrainianMonths[date.getMonth() - 1];
-    year = date.getFullYear();
-
+    day = dd;
+    month = ukrainianMonths[mm];
+    year = yyyy;
+    // day = dd;
+    // month = ukrainianMonths[mm];
+    // year = yyyy;
+    
   }
+
+  else if (format='DDMMYYYY HHMMSS') {
+    const day = String(dd).padStart(2, '0');
+    const month = String(mm + 1).padStart(2, '0'); // Months are zero-based
+    const year = yyyy;
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    return `${day}${sep}${month}${sep}${year} ${hours}:${minutes}:${seconds}`;
+  }
+  
   
   return sep===null ? [day, month, year] : `${day}${sep}${month}${sep}${year}`;
 }
@@ -69,3 +134,15 @@ function _getLastRow(spreadSheet, startCol, endCol, TOLERANCE=10) {
 
   return newLastRow
 };
+
+function getLastFridayFromDate(date) {
+  /* 
+    Gets last Friday from a given date
+    Parameters:
+    =========================================
+      date: an object of class Date
+  */
+  const daysUntilLastFriday = (date.getDay() + 2) % 7; 
+  const lastFriday = new Date(date.getTime() - daysUntilLastFriday * 24 * 60 * 60 * 1000); 
+  return lastFriday;
+  }

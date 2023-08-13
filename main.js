@@ -39,8 +39,34 @@ const columnIndexes = {
 };
 
 
+const ukrainianMonths = [
+  'січня','лютого','березня',
+  'квітня','травня','червня',
+  'липня','серпня','вересня',
+  'жовтня','листопада','грудня'
+  ];
 
 
+const CURSES = [
+
+  "Най тебе качка копне..",
+  "А щоб той код луснув..",
+  "A, cобача кров!",
+  "Дідько б його вхопив..",
+  "Такий код до діла, як свиня штани наділа..",
+  "Дурна програма, як сало без хліба",
+  "А бодай його чорти вхопили…",
+]
+
+const ERROR_MSGS = {
+  GPT_ERROR : 'Помилка на стороні ChatGPT. Спробуйте ще раз.',
+  GPT_RATE_LIMIT_EXCEEDED_ERROR: 'Помилка на стороні ChatGPT. Зачекайте 2 хвилини.',
+  DEFAULT_ERROR : 'Сталась помилка. Зачекайте декілька хвилин.',
+  NO_ROWS_SELECTED_INFO : 'Оберіть рядки, для яких потрібно згенерувати договори.',
+
+}
+
+  
 // Global settings
 const config = Object.values(getConfig())
 let [ 
@@ -53,7 +79,10 @@ let [
   JOURNAL_TABLE_RANGE, 
   SOURCE_SHEET_NAME,
   SOURCE_TABLE_RANGE, 
-  TRIGGER_HANDLER_NAME
+  TRIGGER_HANDLER_NAME,
+  EMAIL_RECIPIENT,
+  OPENAI_API_TOKEN,
+  AWAIT_LOCK_MS
   ] = config;
 
 const DOC_TEMPLATE  = DriveApp.getFileById(DOC_TEMPLATE_ID);
@@ -121,7 +150,7 @@ class UserData {
 }
 
 
-function onOpen() {
+function getMenu() {
   /* 
   Function to render menu for contracts for users to interract with the script
   =========================================
@@ -143,10 +172,11 @@ function main() {
   var lock = LockService.getScriptLock();
 
   try {
-      lock.waitLock(1000);
+      lock.waitLock(AWAIT_LOCK_MS);
   } catch (e) {
-      Logger.log('Could not obtain lock after 30 seconds.');
-      return UI.alert('От халепа...Скрипт уже запущений кимось.', 'Зачекайте декілька хвилин.',  UI.ButtonSet.OK)
+      console.log(`Could not obtain lock after ${AWAIT_LOCK_MS/1000} seconds.`);
+      UI.alert('От халепа...Скрипт уже запущений кимось.', 'Зачекайте декілька хвилин.',  UI.ButtonSet.OK)
+      return
   }
 
   try
@@ -158,13 +188,17 @@ function main() {
       
       // Check if user accidentally selected something and tries to create contracts for them
       if (maxColNumber!==selectedData[0].length || selectedData==null) {   
-        const lastRow =  SOURCE_SHEET.getLastRow()
-        // _getLastRow(SOURCE_SHEET, SOURCE_TABLE_RANGE.columnNumLeft, SOURCE_TABLE_RANGE.columnNumRight)  
-        selectedRange = SOURCE_SHEET.getRange(2, SOURCE_TABLE_RANGE.columnNumLeft, lastRow, SOURCE_TABLE_RANGE.columnNumRight-SOURCE_TABLE_RANGE.columnNumLeft + 1); 
+        return UI.alert('Увага!', ERROR_MSGS.NO_ROWS_SELECTED_INFO, UI.ButtonSet.OK)
+      }
       
-        selectedData = selectedRange.getValues()//.slice(1);
-      } 
-
+      
+      // if (maxColNumber!==selectedData[0].length || selectedData==null) {   
+      //   const lastRow =  SOURCE_SHEET.getLastRow()
+      //   // _getLastRow(SOURCE_SHEET, SOURCE_TABLE_RANGE.columnNumLeft, SOURCE_TABLE_RANGE.columnNumRight)  
+      //   selectedRange = SOURCE_SHEET.getRange(2, SOURCE_TABLE_RANGE.columnNumLeft, lastRow, SOURCE_TABLE_RANGE.columnNumRight-SOURCE_TABLE_RANGE.columnNumLeft + 1); 
+      
+      //   selectedData = selectedRange.getValues()//.slice(1);
+      // } 
       let rowNumber = null;
       selectedData = selectedData.map((el,idx) => {
         rowNumber = selectedRange.getCell(idx+1, 1).getRow();
@@ -173,8 +207,13 @@ function main() {
 
       сopyToJournal(selectedData, JOURNAL_ID, JOURNAL_SHEET_NAME, UI)  
       lock.releaseLock();    
+      
 
 
+
+      
+     
+      
 
 
   }
@@ -182,7 +221,15 @@ function main() {
   catch (error)
   {
     console.log(error)
-    UI.alert('Не вдалось запустити операцію', 'Зачекайте декілька хвилин',  UI.ButtonSet.OK)
+    const today = formatDate(new Date(), format='DDMMYYYY HHMMSS', sep='/');
+    
+    GmailApp.sendEmail(EMAIL_RECIPIENT, 'Contracts & Journal Automation Failure', `A failed execute happened at: ${today}`)
+    const curseIndex = generateRandomInt(min=0, max=CURSES.length)
+
+
+    return UI.alert(CURSES[curseIndex], 
+      Object.values(ERROR_MSGS).includes(error.message) ? error.message : ERROR_MSGS.DEFAULT_ERROR,  UI.ButtonSet.OK)
+    // return UI.alert('Не вдалось запустити операцію', 'Зачекайте декілька хвилин',  UI.ButtonSet.OK)
   }
 
 }
