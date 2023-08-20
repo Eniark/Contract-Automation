@@ -53,10 +53,6 @@ function copyData(dataToCopy) {
       let [campStartDD, campStartMMMM, campStartYYYY] = formatDate(campStartDate, format='DDMMMMYYYY', sep=null);
       let [campEndDD, campEndMMMM, campEndYYYY] = formatDate(campEndDate, format='DDMMMMYYYY', sep=null);
       
-      // const gptPrompt = `Напиши "${userData.FullName}" в орудному відмінку українською мовою`
-      // const gptResponse = callChatGPT(gptPrompt);
-      // const content = gptResponse.choices[0].message.content
-      // const cleaned_OrudnyiFullname = content.replace(/^[,!\\?:;\\.]*/, '').replace(/[,!\\?:;\\.]*$/,'')
       // Replacing placeholders
       const replacements = {
         FullNameNominativ  : userData.FullName,  

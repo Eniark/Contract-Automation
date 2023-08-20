@@ -1,4 +1,7 @@
 function generateRandomInt(min, max) {
+  /*
+    Generates random integer between min and max
+  */
     let difference = max - min;
     let rand = Math.random();
     rand = Math.floor( rand * difference);
@@ -10,6 +13,12 @@ function generateRandomInt(min, max) {
 
 
 function callChatGPT(prompt) {
+  /*
+    Calls ChatGPT api with a given prompt. Uses chat-gpt_3.5_turbo model.
+    Parameters:
+    =========================================
+      prompt: a string that is passed to ChatGPT
+  */
   if (OPENAI_API_TOKEN === null) {
     throw new Error('ChatGPT API Key script property is missing');
   }                  
@@ -69,10 +78,6 @@ function formatDate(date, format='DDMMYYYY', sep='.') {
     day = dd;
     month = ukrainianMonths[mm];
     year = yyyy;
-    // day = dd;
-    // month = ukrainianMonths[mm];
-    // year = yyyy;
-    
   }
 
   else if (format='DDMMYYYY HHMMSS') {

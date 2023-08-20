@@ -59,14 +59,16 @@ function сopyToJournal(data, journal_ID, journalSheetName, UI) {
 
 
     let gptResponse = callChatGPT(gptPrompt).choices[0].message.content;
-    // let gptResponse = '1. Договір укладено між Гуліватого Юрія Дмитровича та...'
     if (gptResponse.includes(':')) {
 
         gptResponse = gptResponse.split(':');
         gptResponse = gptResponse[gptResponse.length - 1].trim();
-        console.log(gptResponse)
 
       }
+
+
+      console.log(gptResponse)
+
       gptResponse= gptResponse.split('\n').map(el=> { 
           let content = el.split(' ').slice(-4).filter(el => el[0]===el[0].toUpperCase()).join(' ')
           const cleaned_OrudnyiFullname = content.replace(/^[,!\\?:;\\.]*/, '').replace(/[,!\\?:;\\.]*$/,'') // strip unneeded characters
@@ -126,12 +128,17 @@ function getFullCampAndDate(userObject, idx) {
   try 
   {
     if (userObject.Camp!==undefined) {
+      const ukrLetters = "[А-Яа-яіїєІЇЄ'`\-]"
+      const regexPrefix = "(?<Prefix>БУР-табір\\s*в)"
+      const regexLocation = `(?<Location>[смт{3}|с|м]+\\s*\.\\s*${ukrLetters}+)`
+      const regexRegion = `(?<Region>${ukrLetters}+\\s*${ukrLetters}+)`
+      const regexDate = `(?<StartDate>\\s*\\d+\\s*${ukrLetters}*)\\s*-\\s*(?<EndDate>\\d+\\s*${ukrLetters}*)`
 
-      const regex = new RegExp(`(?<Prefix>БУР-табір\\s*в)?\\s*(?<Location>[мс]\\s*\.\\s*[А-Яа-яіїє]+)\\s*(?<Region>[А-Яа-яіїє]+\\s*[А-Яа-яіїє]+)?\\s*\\((?<StartDate>\\s*\\d+\\s*[а-яА-Яіїє]*)\\s*-\\s*(?<EndDate>\\d+\\s*[а-яА-Яіїє]*)\\s*\\)`, "u");
-      let [prefix, location, region, startDate, endDate] = Object.values(regex.exec(userObject.Camp).groups);
+      const regexCombinedString =  new RegExp(`${regexPrefix}?\\s*${regexLocation}\\s*${regexRegion}?\\s*\\(${regexDate}\\s*\\)`, "u");
+
+      let [prefix, location, region, startDate, endDate] = Object.values(regexCombinedString.exec(userObject.Camp).groups);
       let [endDayNo, endUkrainianMonth] = endDate.split(' ')
       let endMonthNo = ukrainianMonths.indexOf(endUkrainianMonth);
-
       let startDayNo = startDate;
       let startUkrainianMonth;
       let startMonthNo = endMonthNo;
@@ -141,14 +148,16 @@ function getFullCampAndDate(userObject, idx) {
         startMonthNo = ukrainianMonths.indexOf(startUkrainianMonth);
       }
 
-      if (endMonthNo===-1 || startMonthNo===-1)
+      if (endMonthNo===-1 || startMonthNo===-1) {
         throw new Error(`No such months in UkrainianMonths`)
+      }
 
 
       const todaysYear = new Date().getFullYear(); 
       let endYear = todaysYear;
-      if (endMonthNo==0)
+      if (endMonthNo==0) {
         endYear++;
+      }
       
       startDate = new Date(todaysYear, startMonthNo,startDayNo )
       endDate = new Date(endYear, endMonthNo, endDayNo)
