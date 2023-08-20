@@ -10,4 +10,4 @@ The main purpose of this code is to create new contracts between volunteers and 
     5. The new contract is stored in a folder in Google Drive;
     6. A journal for newly created contracts is filled. 
 
-Users can interract with the script via a button in menu.
+Users can interact with the script via a button in menu.
