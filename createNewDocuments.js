@@ -16,25 +16,62 @@ function replaceBodyPlaceholders(body, replacements) {
   return body;
 }
 
+
+function getSubfolderIDs(destFolder, data) {
+  /* 
+  Creates new subfolders for contracts in case such don't exist.
+  Parameters:
+  =========================================
+    destFolder: folder where to create subfolders
+    data: an array of records that need contracts 
+  */
+
+  let subFolders = destFolder.getFolders();
+  let nameIdMapping = {};
+  camps = [...new Set(data.map(el => `${el.Camp} (${el.CampStartDate} - ${el.CampEndDate})`))];
+  while (subFolders.hasNext()) {
+    let folder = subFolders.next();
+    nameIdMapping[folder.getName()] = folder.getId(); 
+  }
+
+  console.log(`INFO:Available Folders:\n${Object.keys(nameIdMapping)}`);
+  camps.map(el => {
+    if (!Object.keys(nameIdMapping).includes(el)) {
+      const f = destFolder.createFolder(el);
+      console.log(`INFO:Created new subfolder with name: ${el}`);
+      nameIdMapping[el] = f.getId();
+    }
+
+  })
+
+  return nameIdMapping;
+  }
+
+
 function copyData(dataToCopy) { 
   /* 
   Creates new contracts in specified in config folder and fills them with data
   Parameters:
   =========================================
-    dataToCopy: an array of records that need to be 
+    dataToCopy: an array of records that need contracts
   */
+
   const len = dataToCopy.length - 1;
   const start = Date.now();
   let idx = 0;
   let erronous_idxs = [];
+
+  nameIdMapping = getSubfolderIDs(DEST_FOLDER, dataToCopy);
   while (idx <= len) {
     const userData = dataToCopy[idx];
     try
     {
 
       console.log(`INFO:Processing #${idx + 1}... out of ${dataToCopy.length}`);
-        
-      const copiedDocument = DOC_TEMPLATE.makeCopy(`${userData.ContractID} ${userData.FirstName} ${userData.LastName}`, DEST_FOLDER);
+      let subDestinationFolderID = nameIdMapping[`${userData.Camp} (${userData.CampStartDate} - ${userData.CampEndDate})`]
+      const subDestinationFolder = DriveApp.getFolderById(subDestinationFolderID)
+
+      const copiedDocument = DOC_TEMPLATE.makeCopy(`${userData.ContractID} ${userData.FirstName} ${userData.LastName}`, subDestinationFolder);
       const doc = DocumentApp.openById(copiedDocument.getId());
       const body = doc.getBody();
 
@@ -86,7 +123,7 @@ function copyData(dataToCopy) {
     }
     catch (error)
     {
-      console.log(`Caught error while creating document... \n\tFirstName: ${userData.FirstName}\n\tLastName: ${userData.LastName}`)
+      console.log(`ERROR:Caught error while creating document... \n\tFirstName: ${userData.FirstName}\n\tLastName: ${userData.LastName}`)
       console.log(`ERROR: ${error}`)
       erronous_idxs.push(idx);
     }

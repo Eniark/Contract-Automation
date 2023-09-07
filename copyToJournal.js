@@ -59,6 +59,7 @@ function сopyToJournal(data, journal_ID, journalSheetName, UI) {
 
 
     let gptResponse = callChatGPT(gptPrompt).choices[0].message.content;
+    // let gptResponse = 'Між Гуліватим Юрієм Дмитровичем'
     if (gptResponse.includes(':')) {
 
         gptResponse = gptResponse.split(':');
@@ -69,13 +70,13 @@ function сopyToJournal(data, journal_ID, journalSheetName, UI) {
 
       console.log(gptResponse)
 
-      gptResponse= gptResponse.split('\n').map(el=> { 
+      gptResponse = gptResponse.split('\n').map(el=> { 
           let content = el.split(' ').slice(-4).filter(el => el[0]===el[0].toUpperCase()).join(' ')
           const cleaned_OrudnyiFullname = content.replace(/^[,!\\?:;\\.]*/, '').replace(/[,!\\?:;\\.]*$/,'') // strip unneeded characters
           return cleaned_OrudnyiFullname
           })
 
-
+      // For checking validity of ChatGPT
       const testCase = gptResponse.slice(-1)[0].split(' ');
       if (!testCase.includes('Гуліватим'))
       {
@@ -87,7 +88,6 @@ function сopyToJournal(data, journal_ID, journalSheetName, UI) {
         return obj;
       });
 
-      console.log(rowsToCreateNewDocsFor);
 
 
     if (rowsToCreateNewDocsFor.length>0)
@@ -127,7 +127,7 @@ function getFullCampAndDate(userObject, idx) {
   */
   try 
   {
-    if (userObject.Camp!==undefined) {
+    if (userObject.RAW_Camp!==undefined) {
       const ukrLetters = "[А-Яа-яіїєІЇЄ'`\-]"
       const regexPrefix = "(?<Prefix>БУР-табір\\s*в)"
       const regexLocation = `(?<Location>[смт{3}|с|м]+\\s*\.\\s*${ukrLetters}+)`
@@ -136,7 +136,7 @@ function getFullCampAndDate(userObject, idx) {
 
       const regexCombinedString =  new RegExp(`${regexPrefix}?\\s*${regexLocation}\\s*${regexRegion}?\\s*\\(${regexDate}\\s*\\)`, "u");
 
-      let [prefix, location, region, startDate, endDate] = Object.values(regexCombinedString.exec(userObject.Camp).groups);
+      let [prefix, location, region, startDate, endDate] = Object.values(regexCombinedString.exec(userObject.RAW_Camp).groups);
       let [endDayNo, endUkrainianMonth] = endDate.split(' ')
       let endMonthNo = ukrainianMonths.indexOf(endUkrainianMonth);
       let startDayNo = startDate;
@@ -181,8 +181,8 @@ function getFullCampAndDate(userObject, idx) {
   catch (error) 
   {
     errorCount++;
-    console.log(error)
-    console.log(`Skipping record for Journal: \n\tFirstName ${userObject.FirstName}\n\tLastName ${userObject.LastName}
+    console.log(`ERROR:${error}`)
+    console.log(`INFO:Skipping record for Journal: \n\tFirstName ${userObject.FirstName}\n\tLastName ${userObject.LastName}
       \n\tRow Index: ${userObject.rowIdx}`)
   }
 }

@@ -138,7 +138,7 @@ class UserData {
     this.IPN = this.IPN!==undefined ? this.IPN.trim() : this.IPN
     this.PassportNo = this.PassportNo!==undefined ? this.PassportNo.trim() : this.PassportNo
     this.MobilePhone = this.MobilePhone.length!==0 ? this.MobilePhone.trim().padStart(13, '+380'): this.MobilePhone
-    this.Camp = Camp!==undefined ? Camp.trim() : Camp
+    this.RAW_Camp = Camp!==undefined ? Camp.trim() : Camp
     this.DateOfBirth = this.DateOfBirth!==undefined ? this.DateOfBirth.trim() : this.DateOfBirth
     this.DocCreatedCheckBox = this.DocCreatedCheckBox
     this.Email = this.Email!==undefined ? this.Email.trim() : this.Email
@@ -174,7 +174,7 @@ function main() {
   try {
       lock.waitLock(AWAIT_LOCK_MS);
   } catch (e) {
-      console.log(`Could not obtain lock after ${AWAIT_LOCK_MS/1000} seconds.`);
+      console.log(`INFO:Could not obtain lock after ${AWAIT_LOCK_MS/1000} seconds.`);
       UI.alert('От халепа...Скрипт уже запущений кимось.', 'Зачекайте декілька хвилин.',  UI.ButtonSet.OK)
       return
   }
@@ -204,6 +204,7 @@ function main() {
         rowNumber = selectedRange.getCell(idx+1, 1).getRow();
         return [...el, rowNumber]
       } )
+      
 
       сopyToJournal(selectedData, JOURNAL_ID, JOURNAL_SHEET_NAME, UI)  
       lock.releaseLock();    
