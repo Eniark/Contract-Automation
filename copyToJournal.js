@@ -58,8 +58,8 @@ function сopyToJournal(data, journal_ID, journalSheetName, UI) {
     const gptPrompt = 'Напиши ці ПІБ, якби вони були вписані у речення "Договір укладений між...":\n' + rowsToCreateNewDocsFor.map((el, idx)=>[idx+1+'. ', el.FullName+'\n']).flat().join('') + `${rowsToCreateNewDocsFor.length+1}. Гуліватий Юрій Дмитрович`;
 
 
-    let gptResponse = callChatGPT(gptPrompt).choices[0].message.content;
-    // let gptResponse = 'Між Гуліватим Юрієм Дмитровичем'
+    // let gptResponse = callChatGPT(gptPrompt).choices[0].message.content;
+    let gptResponse = 'Між Гуліватим Юрієм Дмитровичем'
     if (gptResponse.includes(':')) {
 
         gptResponse = gptResponse.split(':');
@@ -128,15 +128,14 @@ function getFullCampAndDate(userObject, idx) {
   try 
   {
     if (userObject.RAW_Camp!==undefined) {
-      const ukrLetters = "[А-Яа-яіїєІЇЄ'`\-]"
+      const ukrLetters = "[А-Яа-яіїєІЇЄ'`\\-\\s]"
       const regexPrefix = "(?<Prefix>БУР-табір\\s*в)"
-      const regexLocation = `(?<Location>[смт{3}|с|м]+\\s*\.\\s*${ukrLetters}+)`
+      const regexLocation = `(?<FullLocation>[смт{3}|с|м]+\\s*\.\\s*(?<ShortLocation>${ukrLetters}+\\s*${ukrLetters}*))`
       const regexRegion = `(?<Region>${ukrLetters}+\\s*${ukrLetters}+)`
       const regexDate = `(?<StartDate>\\s*\\d+\\s*${ukrLetters}*)\\s*-\\s*(?<EndDate>\\d+\\s*${ukrLetters}*)`
 
       const regexCombinedString =  new RegExp(`${regexPrefix}?\\s*${regexLocation}\\s*${regexRegion}?\\s*\\(${regexDate}\\s*\\)`, "u");
-
-      let [prefix, location, region, startDate, endDate] = Object.values(regexCombinedString.exec(userObject.RAW_Camp).groups);
+      let [prefix, fullLocation, shortLocation, region, startDate, endDate] = Object.values(regexCombinedString.exec(userObject.RAW_Camp).groups);
       let [endDayNo, endUkrainianMonth] = endDate.split(' ')
       let endMonthNo = ukrainianMonths.indexOf(endUkrainianMonth);
       let startDayNo = startDate;
@@ -171,7 +170,8 @@ function getFullCampAndDate(userObject, idx) {
       userObject.CampEndDate = endDateFormated;
       userObject.CampDate = fullCampDate;
       userObject.Camp = ((prefix===undefined ? '' : prefix) + ' ' +  
-        (location===undefined ? '' : location) + ' ' + (region===undefined ? '' : region)).trim();
+        (fullLocation===undefined ? '' : fullLocation.trim()) + ' ' + (region===undefined ? '' : region)).trim();
+      userObject.ShortLocation = shortLocation.trim();
     }
 
     return userObject

@@ -164,13 +164,15 @@ function getMenu() {
 
 function main() {
   /* 
-  Main entry to the script. Checks if script is already running by a someone
+  Main entry to the script. Calls next function
   =========================================
   */
   var UI  = SpreadsheetApp.getUi();
     // var selectedData = SOURCE_SHEET.getActiveRangeList().getRanges()//.map(el=> el.getValues()[0]) // doesnt work with SHIFT + M1
   var lock = LockService.getScriptLock();
 
+
+  // Check if script is already running
   try {
       lock.waitLock(AWAIT_LOCK_MS);
   } catch (e) {
@@ -179,8 +181,8 @@ function main() {
       return
   }
 
-  try
-  {
+  // try
+  // {
 
     const maxColNumber = SOURCE_SHEET.getLastColumn()
       var selectedRange = SOURCE_SHEET.getActiveRange() // works with SHIFT + M1 and MOUSE, but not CTRL + M1
@@ -204,7 +206,7 @@ function main() {
         rowNumber = selectedRange.getCell(idx+1, 1).getRow();
         return [...el, rowNumber]
       } )
-      
+
 
       сopyToJournal(selectedData, JOURNAL_ID, JOURNAL_SHEET_NAME, UI)  
       lock.releaseLock();    
@@ -217,21 +219,21 @@ function main() {
       
 
 
-  }
+  // }
 
-  catch (error)
-  {
-    console.log(error)
-    const today = formatDate(new Date(), format='DDMMYYYY HHMMSS', sep='/');
+  // catch (error)
+  // {
+  //   console.log(error)
+  //   const today = formatDate(new Date(), format='DDMMYYYY HHMMSS', sep='/');
     
-    GmailApp.sendEmail(EMAIL_RECIPIENT, 'Contracts & Journal Automation Failure', `A failed execute happened at: ${today}`)
-    const curseIndex = generateRandomInt(min=0, max=CURSES.length)
+  //   GmailApp.sendEmail(EMAIL_RECIPIENT, 'Contracts & Journal Automation Failure', `A failed execute happened at: ${today}`)
+  //   const curseIndex = generateRandomInt(min=0, max=CURSES.length)
 
 
-    return UI.alert(CURSES[curseIndex], 
-      Object.values(ERROR_MSGS).includes(error.message) ? error.message : ERROR_MSGS.DEFAULT_ERROR,  UI.ButtonSet.OK)
-    // return UI.alert('Не вдалось запустити операцію', 'Зачекайте декілька хвилин',  UI.ButtonSet.OK)
-  }
+  //   return UI.alert(CURSES[curseIndex], 
+  //     Object.values(ERROR_MSGS).includes(error.message) ? error.message : ERROR_MSGS.DEFAULT_ERROR,  UI.ButtonSet.OK)
+  //   // return UI.alert('Не вдалось запустити операцію', 'Зачекайте декілька хвилин',  UI.ButtonSet.OK)
+  // }
 
 }
 
