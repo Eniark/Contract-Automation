@@ -55,9 +55,11 @@ function getSubfolderIDs(destFolder, data) {
   const regexPatternForCamp = `^(?<Prefix>\\d*\\s*[А-Яа-яіїєІЇЄ'\`\-]*)(?:\\s+(?<Camp>${ukrLetters}+\\s+\\(\\d+\\.\\d+\\.\\d+\\s*-\\s*\\d+\\.\\d+\\.\\d+\\)))?$`;
   const regexCamp = new RegExp(regexPatternForCamp, 'u');
   locations = [...new Set(data.map(el => el.ShortLocation))];
-  camps = [...new Set(data.map(el => [`${el.ShortLocation} (${el.CampStartDate} - ${el.CampEndDate})`, new Date(el.CampStartDate)]))];
-  camps.sort()
-  camps = camps.map(el => el[0]);
+  camps = [...new Set(data.map(el => `${el.ShortLocation} (${el.CampStartDate} - ${el.CampEndDate})`))];
+  console.log(camps)
+  // camps.sort()
+  // camps = camps.map(el => el[0]);
+
 
   let availableFolders = [];
   while (wrapperFolders.hasNext()) {
@@ -65,7 +67,7 @@ function getSubfolderIDs(destFolder, data) {
     availableFolders.push(wrapperFolder.getName())
   }
   
-  console.log(`Available folders: ${availableFolders}`)
+  console.log(`INFO:Available folders: ${availableFolders}`)
 
   locations.forEach(el => { 
     if (availableFolders.indexOf(el) < 0) {
@@ -88,10 +90,13 @@ function getSubfolderIDs(destFolder, data) {
 
         // Extract camp name to use later in the Map
         const camp = subFolder.getName();
-        const [prefix, noPrefixCamp] = Object.values(regexCamp.exec(subFolder.getName()).groups);
+        let [prefix, noPrefixCamp] = Object.values(regexCamp.exec(subFolder.getName()).groups);
         availableSubFolders.push(camp);
         availableSubFolders_noPrefix.push(noPrefixCamp);
-        nameIdMapping[noPrefixCamp===undefined ? prefix : noPrefixCamp] = subFolder.getId();
+        noPrefixCamp = noPrefixCamp===undefined ? prefix : noPrefixCamp
+        if (camps.includes(noPrefixCamp)) {
+          nameIdMapping[noPrefixCamp===undefined ? prefix : noPrefixCamp] = subFolder.getId();
+        }
       }
 
       const subDestFolder = DriveApp.getFolderById(wrapperFolder.getId());

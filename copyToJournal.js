@@ -58,8 +58,8 @@ function сopyToJournal(data, journal_ID, journalSheetName, UI) {
     const gptPrompt = 'Напиши ці ПІБ, якби вони були вписані у речення "Договір укладений між...":\n' + rowsToCreateNewDocsFor.map((el, idx)=>[idx+1+'. ', el.FullName+'\n']).flat().join('') + `${rowsToCreateNewDocsFor.length+1}. Гуліватий Юрій Дмитрович`;
 
 
-    // let gptResponse = callChatGPT(gptPrompt).choices[0].message.content;
-    let gptResponse = 'Між Гуліватим Юрієм Дмитровичем'
+    let gptResponse = callChatGPT(gptPrompt).choices[0].message.content;
+    // let gptResponse = 'Між Гуліватим Юрієм Дмитровичем'
     if (gptResponse.includes(':')) {
 
         gptResponse = gptResponse.split(':');
