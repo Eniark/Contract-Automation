@@ -57,31 +57,34 @@ function сopyToJournal(data, journal_ID, journalSheetName, UI) {
     rowsToCreateNewDocsFor = fillNextIDs(rowsToCreateNewDocsFor, lastContractID);
     const gptPrompt = 'Напиши ці ПІБ, якби вони були вписані у речення "Договір укладений між...":\n' + rowsToCreateNewDocsFor.map((el, idx)=>[idx+1+'. ', el.FullName+'\n']).flat().join('') + `${rowsToCreateNewDocsFor.length+1}. Гуліватий Юрій Дмитрович`;
 
+    var validResponse = false
+    while (!validResponse) {
+      var gptResponse = callChatGPT(gptPrompt).choices[0].message.content;
+      // let gptResponse = 'Між Гуліватим Юрієм Дмитровичем'
+      if (gptResponse.includes(':')) {
 
-    let gptResponse = callChatGPT(gptPrompt).choices[0].message.content;
-    // let gptResponse = 'Між Гуліватим Юрієм Дмитровичем'
-    if (gptResponse.includes(':')) {
+          gptResponse = gptResponse.split(':');
+          gptResponse = gptResponse[gptResponse.length - 1].trim();
 
-        gptResponse = gptResponse.split(':');
-        gptResponse = gptResponse[gptResponse.length - 1].trim();
-
-      }
+        }
 
 
-      console.log(gptResponse)
+        console.log(gptResponse)
 
-      gptResponse = gptResponse.split('\n').map(el=> { 
-          let content = el.split(' ').slice(-4).filter(el => el[0]===el[0].toUpperCase()).join(' ')
-          const cleaned_OrudnyiFullname = content.replace(/^[,!\\?:;\\.]*/, '').replace(/[,!\\?:;\\.]*$/,'') // strip unneeded characters
-          return cleaned_OrudnyiFullname
-          })
+        gptResponse = gptResponse.split('\n').map(el=> { 
+            let content = el.split(' ').slice(-4).filter(el => el[0]===el[0].toUpperCase()).join(' ')
+            const cleaned_OrudnyiFullname = content.replace(/^[,!\\?:;\\.]*/, '').replace(/[,!\\?:;\\.]*$/,'') // strip unneeded characters
+            return cleaned_OrudnyiFullname
+            })
 
-      // For checking validity of ChatGPT
-      const testCase = gptResponse.slice(-1)[0].split(' ');
-      if (!testCase.includes('Гуліватим'))
-      {
-        throw new Error(ERROR_MSGS.GPT_ERROR)
-      }
+        // For checking validity of ChatGPT
+        const testCase = gptResponse.slice(-1)[0].split(' ');
+        if (testCase.includes('Гуліватим'))
+        {
+          // throw new Error(ERROR_MSGS.GPT_ERROR)
+          validResponse = true  
+        }
+      } 
 
       rowsToCreateNewDocsFor = rowsToCreateNewDocsFor.map((obj, idx) => {
         obj.Orudnyi_FullName = gptResponse[idx];
@@ -128,11 +131,11 @@ function getFullCampAndDate(userObject, idx) {
   try 
   {
     if (userObject.RAW_Camp!==undefined) {
-      const ukrLetters = "[А-Яа-яіїєІЇЄ'`\\-\\s]"
+      const cyrilicWord = "[А-Яа-яіїєІЇЄ'`\\-\\s]"
       const regexPrefix = "(?<Prefix>БУР-табір\\s*в)"
-      const regexLocation = `(?<FullLocation>[смт{3}|с|м]+\\s*\.\\s*(?<ShortLocation>${ukrLetters}+\\s*${ukrLetters}*))`
-      const regexRegion = `(?<Region>${ukrLetters}+\\s*${ukrLetters}+)`
-      const regexDate = `(?<StartDate>\\s*\\d+\\s*${ukrLetters}*)\\s*-\\s*(?<EndDate>\\d+\\s*${ukrLetters}*)`
+      const regexLocation = `(?<FullLocation>[смт{3}|с|м]*\\s*\\.*\\s*(?<ShortLocation>${cyrilicWord}+\\s*${cyrilicWord}*\\s*${cyrilicWord}*))`
+      const regexRegion = `(?<Region>${cyrilicWord}+\\s*${cyrilicWord}+)`
+      const regexDate = `(?<StartDate>\\s*\\d+\\s*${cyrilicWord}*)\\s*-\\s*(?<EndDate>\\d+\\s*${cyrilicWord}*)`
 
       const regexCombinedString =  new RegExp(`${regexPrefix}?\\s*${regexLocation}\\s*${regexRegion}?\\s*\\(${regexDate}\\s*\\)`, "u");
       let [prefix, fullLocation, shortLocation, region, startDate, endDate] = Object.values(regexCombinedString.exec(userObject.RAW_Camp).groups);
